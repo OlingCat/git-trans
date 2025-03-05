@@ -1,0 +1,27 @@
+[package]
+name = "git-trans"
+version = "0.1.0"
+edition = "2024"
+homepage = "https://github.com/OlingCat/git-trans"
+repository = "https://github.com/OlingCat/git-trans"
+description = "A translation toolbox for projects using git"
+readme = "README.md"
+license = "MIT"
+keywords = ["git", "translate"]
+categories = ["command-line-utilities", "internationalization", "localization"]
+
+[dependencies]
+chrono = "0.4.40"
+clap = { version = "4.5.20", features = ["derive"] }
+env_logger = "0.11.5"
+log = "0.4.22"
+serde = { version = "1.0.210", features = ["derive"] }
+toml = "0.8.19"
+wild = { version = "2.2.1", features = ["glob-quoted-on-windows"] }
+
+[package.metadata.scripts]
+run = "cargo run"
+check = "cargo check"
+build = "cargo build"
+release = "cargo build --release"
+init = "cargo run -- init"
