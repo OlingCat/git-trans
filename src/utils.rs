@@ -1,6 +1,6 @@
 use core::convert::AsRef;
 use std::fs::{self, File, OpenOptions};
-use std::io::{ Error, ErrorKind, Result };
+use std::io::{ Error, ErrorKind, Result, Write };
 use std::path::{Path, PathBuf, StripPrefixError};
 
 use log::debug;
@@ -38,6 +38,18 @@ pub fn copy_file_to_trans<P: AsRef<Path>>(from: P) -> Result<u64> {
     let to = get_trans_dir().join(path_rel_to_root);
     println!("from: {:?}, to: {:?}", from.as_ref(), to);
     copy_file(from, to, false)
+}
+
+/// Write content to a file
+pub fn write_diff_file_to_trans<P: AsRef<Path>>(to: P, content: &str) -> Result<()> {
+    let path_rel_to_root = get_path_rel_to_root(&PathBuf::from(to.as_ref()));
+    let mut to = get_trans_dir().join(path_rel_to_root);
+    if let Some(fname) = to.file_name().and_then(|s| s.to_str()) {
+        to.set_file_name(format!("{}.diff", fname));
+    }
+    let mut file = create_file_with_dirs(to)?;
+    file.write_all(content.as_bytes())?;
+    Ok(())
 }
 
 /// Copy files in .trans folder to root directory

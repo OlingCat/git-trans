@@ -55,7 +55,7 @@ git log -- .trans/
 - [ ] status
 - [x] log
 - [x] diff
-- [ ] gendiff
+- [x] gendiff
 - [x] sync
 - [x] cover
 - [x] reset

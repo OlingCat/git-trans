@@ -132,10 +132,15 @@ pub fn main() -> Result<(), Error> {
                     );
                     Ok(())
                 }
-                Commands::Gendiff(path_args) => {
+                Commands::Gendiff{ path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    let old_rev = records.get(path).unwrap().track_rev;
+                    let new_rev = get_file_revision(path);
+                    let diff_file = get_diff(path, &old_rev, &new_rev);
+                    write_diff_file_to_trans(path, &diff_file)?;     // write diff file to .trans dir
                     debug!(
                         "'git trans gendiff' was run,\npath: {}\ntoml:\n{}",
-                        path_args.path.as_ref().unwrap().to_path_buf().display(),
+                        path.to_path_buf().display(),
                         "None"
                     );
                     Ok(())

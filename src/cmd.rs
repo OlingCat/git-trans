@@ -55,13 +55,17 @@ pub enum Commands {
     /// Diff file changes
     #[command(arg_required_else_help = true)]
     Diff {
-        /// Files to remove from the records
+        /// File to diff with latest revision
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
     /// Generate diff file
     #[command(arg_required_else_help = true)]
-    Gendiff(PathArgs),
+    Gendiff {
+        /// File to generate diff with latest revision
+        #[arg(required = true)]
+        path_args: Vec<PathBuf>,
+    },
     /// Sync file with latest revision
     #[command(arg_required_else_help = true)]
     Sync {
