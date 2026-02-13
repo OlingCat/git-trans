@@ -1,6 +1,8 @@
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
+use crate::records::Status;
+
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -85,13 +87,58 @@ pub enum Commands {
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
-    /// Cover files in repo folder
+    /// Cover files in repo root folder
     Cover,
     /// Reset the root folder to the latest revision
     Reset,
     /// Show logs in the .trans folder
     Log,
+    /// Show files in a specific state
+    Show {
+        /// Action to perform on the files
+        #[command(subcommand)]
+        status: Status,
+    },
+    /// Mark files as given status
+    #[command(arg_required_else_help = true)]
+    Mark {
+        /// Action to perform on the files
+        #[command(subcommand)]
+        status: CmdStatus,
+    },
 }
+
+#[derive(Subcommand)]
+pub enum CmdStatus {
+    Todo {
+        path: PathBuf,
+    },
+    ToReview {
+        path: PathBuf,
+    },
+    Done {
+        path: PathBuf,
+    },
+    Unsynced {
+        path: PathBuf,
+    },
+    Synced {
+        path: PathBuf,
+    },
+}
+
+impl From<CmdStatus> for Status {
+    fn from(cmd_status: CmdStatus) -> Self {
+        match cmd_status {
+            CmdStatus::Todo { .. } => Status::Todo,
+            CmdStatus::ToReview { .. } => Status::ToReview,
+            CmdStatus::Done { .. } => Status::Done,
+            CmdStatus::Unsynced { .. } => Status::Unsynced,
+            CmdStatus::Synced { .. } => Status::Synced,
+        }
+    }
+}
+
 
 #[derive(Args)]
 pub struct PathArgs {

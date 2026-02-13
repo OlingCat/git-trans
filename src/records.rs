@@ -1,10 +1,13 @@
 use chrono::Local;
+use clap::{Subcommand, ValueEnum};
 use core::{option::Option::None, result::Result};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Error, ErrorKind},
     path::PathBuf,
     str::FromStr,
+    fs,
 };
 use toml::value::Datetime;
 
@@ -30,10 +33,55 @@ pub struct Meta {
     pub datetime: Datetime,
 }
 
+/// File status
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Subcommand, ValueEnum)]
+pub enum Status {
+    /// File is to be translated
+    Todo,
+    /// File is to be reviewed
+    ToReview,
+    /// File is done
+    Done,
+    /// File is synced
+    Synced,
+    /// File is unsynced
+    Unsynced,
+}
+
+impl Status {
+    /// Iterate through every possible `Status` variant.
+    pub fn iter() -> impl Iterator<Item = Status> {
+        [
+            Status::Todo,
+            Status::ToReview,
+            Status::Done,
+            Status::Synced,
+            Status::Unsynced,
+        ]
+        .iter()
+        .cloned()
+    }
+}
+impl FromStr for Status {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Status, Self::Err> {
+        match input {
+            "Todo" => Ok(Status::Todo),
+            "ToReview" => Ok(Status::ToReview),
+            "Done" => Ok(Status::Done),
+            "Synced" => Ok(Status::Synced),
+            "Unsynced" => Ok(Status::Unsynced),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TrackedFile {
     pub path: PathBuf,
     pub track_rev: String,
+    pub status: Status,
     pub locked: Option<bool>,
 }
 
@@ -72,6 +120,7 @@ impl Records {
         let file = TrackedFile {
             path: path_rel_to_root,
             track_rev: get_file_revision(&path),
+            status: Status::Todo,
             locked: if lock { Some(true) } else { None },
         };
         self.files.push(file.clone());
@@ -97,7 +146,7 @@ impl Records {
     }
 
     /// Update file in records
-    pub fn update<F>(&mut self, path: &PathBuf, operate: F) -> Result<TrackedFile, Error>
+    pub fn update<F>(&mut self, path: &PathBuf, modify_fn: F) -> Result<TrackedFile, Error>
     where
         F: FnOnce(&mut TrackedFile),
     {
@@ -109,12 +158,35 @@ impl Records {
             .iter_mut()
             .find(|file| file.path == path_rel_to_root)
         {
-            operate(file);
-            Ok(file.clone())
+            modify_fn(file);
+            let file_result = file.clone();
+            // End mutable borrow before serializing self
+            let toml = toml::to_string(self).unwrap();
+            fs::write(get_records_toml(), toml)?;
+            Ok(file_result)
         } else {
             let err = Error::new(ErrorKind::NotFound, "record not found");
             Err(err)
         }
+    }
+
+    /// Show files with specific status
+    pub fn show(&self, status: Status) {
+        let files = self.files.iter().filter(|file| file.status == status);
+        if files.clone().count() == 0 {
+            println!("No files with status {:?}", status);
+            return;
+        }
+        for file in files {
+            println!("{:?}: {:?}", file.status, file.path);
+        }
+    }
+
+    /// Mark file status in records
+    pub fn mark(&mut self, status: Status, path: &PathBuf) -> Result<TrackedFile, Error> {
+        debug!("mark {:?} {:?}", status, path);
+        let mark = |file: &mut TrackedFile| file.status = status;
+        self.update(path, mark)
     }
 
     /// Get file in records

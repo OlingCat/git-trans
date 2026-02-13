@@ -6,6 +6,8 @@ use log::{debug, error, info};
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
 use std::path::{Path, PathBuf};
+use Commands::Status as Cmdstatus;
+use Commands::*;
 
 mod cmd;
 mod git;
@@ -15,6 +17,7 @@ mod utils;
 use cmd::*;
 use git::*;
 use records::*;
+use records::Status;
 use utils::*;
 
 #[allow(unused)]
@@ -43,7 +46,7 @@ pub fn main() -> Result<(), Error> {
 
     match &cli.command {
         // init .trans folder
-        Commands::Init { lang, tag } => {
+        Init { lang, tag } => {
             info!("'git trans init' was run");
             let content = toml::to_string(&Records::init(lang, tag).unwrap()).unwrap();
             create_file_with_dirs(records_toml)
@@ -73,7 +76,7 @@ pub fn main() -> Result<(), Error> {
             let mut records: Records = toml::from_str(&records_str).unwrap();
 
             match &cli.command {
-                Commands::Add { path_args: path, lock } => {
+                Add { path_args: path, lock } => {
                     let path = path[0].to_path_buf();
                     let path_rel_to_root = get_path_rel_to_root(&path);
 
@@ -82,28 +85,15 @@ pub fn main() -> Result<(), Error> {
                     let added_file = records.add(&path, *lock)?;
                     records_str = toml::to_string(&records).unwrap();
                     fs::write(&records_toml, records_str)?;
-
-                    debug!(
-                        "'git trans add' was run,\npath: {}\nlocked: {}\ntoml:\n{}",
-                        path.display(),
-                        lock,
-                        toml::to_string(&added_file).unwrap(),
-                    );
                     Ok(())
                 }
-                Commands::Rm { path_args: path } => {
+                Rm { path_args: path } => {
                     let removed_file = records.remove(&path[0].to_path_buf()).unwrap();
                     records_str = toml::to_string(&records).unwrap();
                     fs::write(&records_toml, records_str).unwrap();
-
-                    debug!(
-                        "'git trans rm' was run,\npath: {}\ntoml:\n{}",
-                        path[0].to_path_buf().display(),
-                        toml::to_string(&removed_file).unwrap()
-                    );
                     Ok(())
                 }
-                Commands::Ls {
+                Ls {
                     path,
                     all,
                     recursive,
@@ -115,77 +105,75 @@ pub fn main() -> Result<(), Error> {
                     );
                     Ok(())
                 }
-                Commands::Status => {
-                    debug!("'git trans status' was run");
-                    Ok(())
-                }
-                Commands::Diff{ path_args: path } => {
+                Diff { path_args: path } => {
                     let path = &path[0].to_path_buf();
                     let old_rev = records.get(path).unwrap().track_rev;
                     let new_rev = get_file_revision(path);
                     println!("{}", get_diff(path, &old_rev, &new_rev));
-
-                    debug!(
-                        "'git trans diff' was run,\npath: {}\ntoml:\n{}",
-                        path.to_path_buf().display(),
-                        "None"
-                    );
                     Ok(())
                 }
-                Commands::Gendiff{ path_args: path } => {
+                Gendiff { path_args: path } => {
                     let path = &path[0].to_path_buf();
                     let old_rev = records.get(path).unwrap().track_rev;
                     let new_rev = get_file_revision(path);
                     let diff_file = get_diff(path, &old_rev, &new_rev);
-                    write_diff_file_to_trans(path, &diff_file)?;     // write diff file to .trans dir
-                    debug!(
-                        "'git trans gendiff' was run,\npath: {}\ntoml:\n{}",
-                        path.to_path_buf().display(),
-                        "None"
-                    );
+                    // this will write diff file to .trans dir
+                    write_diff_file_to_trans(path, &diff_file)?;
                     Ok(())
                 }
-                Commands::Sync{ path_args: path } => {
+                Sync { path_args: path } => {
                     let path = &path[0].to_path_buf();
                     records.sync(path);
-                    debug!(
-                        "'git trans sync' was run,\npath: {}\ntoml:\n{}",
-                        path.to_path_buf().display(),
-                        "None"
-                    );
                     Ok(())
                 }
-                Commands::Lock{ path_args: path } => {
+                Lock { path_args: path } => {
                     let path = &path[0].to_path_buf();
                     records.lock(path);
-                    debug!(
-                        "'git trans lock' was run,\npath: {}\ntoml:\n{}",
-                        path.to_path_buf().display(),
-                        "None"
-                    );
                     Ok(())
                 }
-                Commands::Unlock{ path_args: path } => {
+                Unlock { path_args: path } => {
                     let path = &path[0].to_path_buf();
                     records.unlock(path);
-                    debug!(
-                        "'git trans unlock' was run,\npath: {}\ntoml:\n{}",
-                        path.to_path_buf().display(),
-                        "None"
-                    );
                     Ok(())
                 }
-                Commands::Cover => {
+                Cover => {
                     debug!("copy files in .trans dir to root dir");
                     let count = cover()?;
                     Ok(())
                 }
-                Commands::Reset => {
+                Reset => {
                     reset();
                     Ok(())
                 }
-                Commands::Log => {
+                Log => {
                     println!("{}", get_log(&get_trans_dir()));
+                    Ok(())
+                }
+                Cmdstatus => {
+                    debug!("'git trans status' was run");
+                    for status in Status::iter() {
+                        records.show(status);
+                    }
+                    Ok(())
+                }
+                Show { status } => {
+                    match status {
+                        Status::Todo => records.show(Status::Todo),
+                        Status::ToReview => records.show(Status::ToReview),
+                        Status::Done => records.show(Status::Done),
+                        Status::Unsynced => records.show(Status::Unsynced),
+                        Status::Synced => records.show(Status::Synced),
+                    }
+                    Ok(())
+                }
+                Mark { status } => {
+                    match status {
+                        cmd::CmdStatus::Todo { path } => { records.mark(Status::Todo, path)?; }
+                        cmd::CmdStatus::ToReview { path } => { records.mark(Status::ToReview, path)?; }
+                        cmd::CmdStatus::Done { path } => { records.mark(Status::Done, path)?; }
+                        cmd::CmdStatus::Unsynced { path } => { records.mark(Status::Unsynced, path)?; }
+                        cmd::CmdStatus::Synced { path } => { records.mark(Status::Synced, path)?; }
+                    }
                     Ok(())
                 }
                 _ => todo!(),
