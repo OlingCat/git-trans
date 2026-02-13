@@ -1,7 +1,9 @@
+use core::convert::AsRef;
 use std::fs::{self, File, OpenOptions};
-use std::io::{ Error, ErrorKind, Result};
+use std::io::{ Error, ErrorKind, Result };
 use std::path::{Path, PathBuf, StripPrefixError};
-use std::result;
+
+use log::debug;
 
 use crate::git::get_root_dir;
 
@@ -38,7 +40,50 @@ pub fn copy_file_to_trans<P: AsRef<Path>>(from: P) -> Result<u64> {
     copy_file(from, to, false)
 }
 
+/// Copy files in .trans folder to root directory
+pub fn cover() -> Result<u64> {
+    let from = get_trans_dir();
+    let to_root = get_root_dir().unwrap();
+    // recursively copy everything under .trans into root, skipping the records file
+    copy_dir_recursive(&from, &to_root, &from)
+}
+
+/// Recursively walk a source directory and copy all files to the destination root,
+/// preserving the tree structure. `base` is the top of the recursion and is used
+/// to compute the relative path for each entry. The function returns the number of
+/// files copied. Existing files are always overwritten.
+fn copy_dir_recursive(src: &Path, dest_root: &Path, base: &Path) -> Result<u64> {
+    let mut count = 0;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        // skip the records file at the top level
+        if path.file_name().and_then(|n| n.to_str()) == Some("records.toml") {
+            continue;
+        }
+
+        if path.is_dir() {
+            // recurse into subdirectory
+            count += copy_dir_recursive(&path, dest_root, base)?;
+        } else if path.is_file() {
+            let rel = path.strip_prefix(base).unwrap();
+            let dest = dest_root.join(rel);
+            if let Some(parent) = dest.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            debug!("cover:\nfrom: {:?},\nto: {:?}", path, dest);
+            if let Err(e) = copy_file(&path, &dest, true) {
+                debug!("cover error: {:?}", e);
+            }
+            count += 1;
+        }
+    }
+    Ok(count)
+}
+
 /// # Path handling functions
+
 /// Get the .trans directory
 pub fn get_trans_dir() -> PathBuf {
     return get_root_dir().unwrap().join(".trans");
@@ -53,7 +98,7 @@ pub fn get_records_toml() -> PathBuf {
 pub fn absolute_to_relative<P: AsRef<Path>, Q: AsRef<Path>>(
     base: P,
     path: Q,
-) -> result::Result<PathBuf, StripPrefixError> {
+) -> std::result::Result<PathBuf, StripPrefixError> {
     let base = base.as_ref();
     let path = path.as_ref();
     path.strip_prefix(base)

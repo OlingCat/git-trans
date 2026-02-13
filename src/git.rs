@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{error::Error, fs, path::PathBuf, process::Command};
 
 /// Get the root directory of the git repository
 pub fn get_root_dir() -> Option<PathBuf> {
@@ -24,6 +24,7 @@ pub fn get_root_dir() -> Option<PathBuf> {
     return Some(PathBuf::from(absolute_path));
 }
 
+/// Get current directory path prefix
 pub fn get_prefix() -> Option<PathBuf> {
     let prefix = Command::new("git")
         .args(["rev-parse", "--show-prefix"])
@@ -44,7 +45,7 @@ pub fn get_prefix() -> Option<PathBuf> {
 }
 
 /// Get the revision from a tag
-pub fn get_revision(tag: &String) -> Option<String> {
+pub fn get_tag_revision(tag: &String) -> Option<String> {
     let revision = Command::new("git")
         .args(["rev-parse", tag])
         .output()
@@ -80,4 +81,27 @@ pub fn get_diff(path: &PathBuf, old_rev: &str, new_rev: &str) -> String {
         .expect("failed to execute: git diff {old_rev} {new_rev} {path}");
     let diff = String::from_utf8_lossy(&diff.stdout).to_string();
     return diff;
+}
+
+/// Show logs in the .trans folder
+pub fn get_log(path: &PathBuf) -> String {
+    let log = Command::new("git")
+        .args(["log", "--", path.to_str().unwrap()])
+        .output()
+        .expect("failed to execute: git log -- {path}");
+    let log = String::from_utf8_lossy(&log.stdout).to_string();
+    return log;
+}
+
+/// Reset the root folder to the latest revision
+pub fn reset() -> Result<(), Box<dyn Error>> {
+    let output = Command::new("git")
+        .args(["restore", "--source=HEAD", "--staged", "--worktree", ".", ":(exclude).trans/"])
+        .output()?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(format!("failed to execute: git reset --hard HEAD -- . :!.trans/").into())
+    }
 }

@@ -16,6 +16,7 @@ git trans sync <file>...
 git trans cover
 # build
 git trans reset
+git trans log
 git commit (precommit script)
 git push
 ```
@@ -39,8 +40,7 @@ git diff <old-revision> HEAD <file>
 git diff <revision_1>:<file_1> <revision_2>:<file_2>
 
 # reset all files butexcept .trans folder
-git reset --hard HEAD . :(exclude).trans/
-git reset --hard HEAD . :!.trans/
+git restore --source=HEAD --staged --worktree . ":(exclude).trans/"
 
 # show log only in .trans folder
 git log -- .trans/
@@ -53,9 +53,9 @@ git log -- .trans/
 - [x] rm
 - [ ] ls
 - [ ] status
-- [ ] log
-- [ ] diff
+- [x] log
+- [x] diff
 - [ ] gendiff
-- [ ] sync
-- [ ] cover
-- [ ] reset
+- [x] sync
+- [x] cover
+- [x] reset

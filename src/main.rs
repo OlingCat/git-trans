@@ -1,8 +1,8 @@
-use clap::Parser;
 #[allow(unused)]
 use clap::error::ErrorKind as ClapErrorKind;
-use log::{debug, error, info, warn};
+use clap::Parser;
 use core::todo;
+use log::{debug, error, info};
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
 use std::path::{Path, PathBuf};
@@ -73,7 +73,7 @@ pub fn main() -> Result<(), Error> {
             let mut records: Records = toml::from_str(&records_str).unwrap();
 
             match &cli.command {
-                Commands::Add { paths: path, lock } => {
+                Commands::Add { path_args: path, lock } => {
                     let path = path[0].to_path_buf();
                     let path_rel_to_root = get_path_rel_to_root(&path);
 
@@ -91,10 +91,11 @@ pub fn main() -> Result<(), Error> {
                     );
                     Ok(())
                 }
-                Commands::Rm { paths: path } => {
+                Commands::Rm { path_args: path } => {
                     let removed_file = records.remove(&path[0].to_path_buf()).unwrap();
                     records_str = toml::to_string(&records).unwrap();
                     fs::write(&records_toml, records_str).unwrap();
+
                     debug!(
                         "'git trans rm' was run,\npath: {}\ntoml:\n{}",
                         path[0].to_path_buf().display(),
@@ -118,10 +119,15 @@ pub fn main() -> Result<(), Error> {
                     debug!("'git trans status' was run");
                     Ok(())
                 }
-                Commands::Diff(path_args) => {
+                Commands::Diff{ path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    let old_rev = records.get(path).unwrap().track_rev;
+                    let new_rev = get_file_revision(path);
+                    println!("{}", get_diff(path, &old_rev, &new_rev));
+
                     debug!(
                         "'git trans diff' was run,\npath: {}\ntoml:\n{}",
-                        path_args.path.as_ref().unwrap().to_path_buf().display(),
+                        path.to_path_buf().display(),
                         "None"
                     );
                     Ok(())
@@ -134,17 +140,49 @@ pub fn main() -> Result<(), Error> {
                     );
                     Ok(())
                 }
-                Commands::Sync(path_args) => {
+                Commands::Sync{ path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    records.sync(path);
                     debug!(
                         "'git trans sync' was run,\npath: {}\ntoml:\n{}",
-                        path_args.path.as_ref().unwrap().to_path_buf().display(),
+                        path.to_path_buf().display(),
                         "None"
                     );
                     Ok(())
                 }
-                Commands::Cover => todo!(),
-                Commands::Reset => todo!(),
-                Commands::Log => todo!(),
+                Commands::Lock{ path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    records.lock(path);
+                    debug!(
+                        "'git trans lock' was run,\npath: {}\ntoml:\n{}",
+                        path.to_path_buf().display(),
+                        "None"
+                    );
+                    Ok(())
+                }
+                Commands::Unlock{ path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    records.unlock(path);
+                    debug!(
+                        "'git trans unlock' was run,\npath: {}\ntoml:\n{}",
+                        path.to_path_buf().display(),
+                        "None"
+                    );
+                    Ok(())
+                }
+                Commands::Cover => {
+                    debug!("copy files in .trans dir to root dir");
+                    let count = cover()?;
+                    Ok(())
+                }
+                Commands::Reset => {
+                    reset();
+                    Ok(())
+                }
+                Commands::Log => {
+                    println!("{}", get_log(&get_trans_dir()));
+                    Ok(())
+                }
                 _ => todo!(),
             }
         }

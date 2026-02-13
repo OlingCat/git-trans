@@ -26,7 +26,7 @@ pub enum Commands {
     Add {
         /// Files to add to the records
         #[arg(required = true)]
-        paths: Vec<PathBuf>,
+        path_args: Vec<PathBuf>,
         /// Lock files
         #[arg(long)]
         lock: bool,
@@ -36,7 +36,7 @@ pub enum Commands {
     Rm {
         /// Files to remove from the records
         #[arg(required = true)]
-        paths: Vec<PathBuf>,
+        path_args: Vec<PathBuf>,
     },
     /// List files in .trans
     Ls {
@@ -54,15 +54,38 @@ pub enum Commands {
     Status,
     /// Diff file changes
     #[command(arg_required_else_help = true)]
-    Diff(PathArgs),
+    Diff {
+        /// Files to remove from the records
+        #[arg(required = true)]
+        path_args: Vec<PathBuf>,
+    },
     /// Generate diff file
     #[command(arg_required_else_help = true)]
     Gendiff(PathArgs),
     /// Sync file with latest revision
     #[command(arg_required_else_help = true)]
-    Sync(PathArgs),
+    Sync {
+        /// Files to sync with latest revision
+        #[arg(required = true)]
+        path_args: Vec<PathBuf>,
+    },
+    /// Lock file
+    Lock {
+        /// Files to lock
+        #[arg(required = true)]
+        path_args: Vec<PathBuf>,
+    },
+    /// Unlock file
+    Unlock {
+        /// Files to unlock
+        #[arg(required = true)]
+        path_args: Vec<PathBuf>,
+    },
+    /// Cover files in repo folder
     Cover,
+    /// Reset the root folder to the latest revision
     Reset,
+    /// Show logs in the .trans folder
     Log,
 }
 
