@@ -126,16 +126,6 @@ pub fn main() -> Result<(), Error> {
                     records.sync(path);
                     Ok(())
                 }
-                Lock { path_args: path } => {
-                    let path = &path[0].to_path_buf();
-                    records.lock(path);
-                    Ok(())
-                }
-                Unlock { path_args: path } => {
-                    let path = &path[0].to_path_buf();
-                    records.unlock(path);
-                    Ok(())
-                }
                 Cover => {
                     debug!("copy files in .trans dir to root dir");
                     let count = cover()?;
@@ -163,16 +153,20 @@ pub fn main() -> Result<(), Error> {
                         Status::Done => records.show(Status::Done),
                         Status::Unsynced => records.show(Status::Unsynced),
                         Status::Synced => records.show(Status::Synced),
+                        Status::Lock => records.show(Status::Lock),
+                        Status::Unlock => records.show(Status::Unlock),
                     }
                     Ok(())
                 }
                 Mark { status } => {
                     match status {
-                        cmd::CmdStatus::Todo { path } => { records.mark(Status::Todo, path)?; }
-                        cmd::CmdStatus::ToReview { path } => { records.mark(Status::ToReview, path)?; }
-                        cmd::CmdStatus::Done { path } => { records.mark(Status::Done, path)?; }
-                        cmd::CmdStatus::Unsynced { path } => { records.mark(Status::Unsynced, path)?; }
-                        cmd::CmdStatus::Synced { path } => { records.mark(Status::Synced, path)?; }
+                        MarkStatus::Todo { path } => { records.mark(Status::Todo, path)?; }
+                        MarkStatus::ToReview { path } => { records.mark(Status::ToReview, path)?; }
+                        MarkStatus::Done { path } => { records.mark(Status::Done, path)?; }
+                        MarkStatus::Unsynced { path } => { records.mark(Status::Unsynced, path)?; }
+                        MarkStatus::Synced { path } => { records.mark(Status::Synced, path)?; }
+                        MarkStatus::Lock { path } => { records.mark(Status::Lock, path)?; }
+                        MarkStatus::Unlock { path } => { records.mark(Status::Unlock, path)?; }
                     }
                     Ok(())
                 }

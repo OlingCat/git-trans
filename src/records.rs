@@ -4,10 +4,7 @@ use core::{option::Option::None, result::Result};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use std::{
-    io::{Error, ErrorKind},
-    path::PathBuf,
-    str::FromStr,
-    fs,
+    fs, io::{Error, ErrorKind}, path::PathBuf, str::FromStr, fmt::Display
 };
 use toml::value::Datetime;
 
@@ -46,6 +43,10 @@ pub enum Status {
     Synced,
     /// File is unsynced
     Unsynced,
+    /// File is locked
+    Lock,
+    /// File is unlocked
+    Unlock,
 }
 
 impl Status {
@@ -74,6 +75,12 @@ impl FromStr for Status {
             "Unsynced" => Ok(Status::Unsynced),
             _ => Err(()),
         }
+    }
+}
+
+impl Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -161,8 +168,7 @@ impl Records {
             modify_fn(file);
             let file_result = file.clone();
             // End mutable borrow before serializing self
-            let toml = toml::to_string(self).unwrap();
-            fs::write(get_records_toml(), toml)?;
+            self.save()?;
             Ok(file_result)
         } else {
             let err = Error::new(ErrorKind::NotFound, "record not found");
@@ -170,23 +176,44 @@ impl Records {
         }
     }
 
+    /// Save records to records.toml
+    pub fn save(&self) -> std::io::Result<()> {
+        let toml = toml::to_string(self).unwrap();
+        fs::write(get_records_toml(), toml)
+    }
+
     /// Show files with specific status
     pub fn show(&self, status: Status) {
         let files = self.files.iter().filter(|file| file.status == status);
         if files.clone().count() == 0 {
-            println!("No files with status {:?}", status);
+            println!("\nNo files with status {:?}", status);
             return;
         }
         for file in files {
-            println!("{:?}: {:?}", file.status, file.path);
+            println!("{:?}: {}", file.status, file.path.display());
         }
     }
 
     /// Mark file status in records
     pub fn mark(&mut self, status: Status, path: &PathBuf) -> Result<TrackedFile, Error> {
-        debug!("mark {:?} {:?}", status, path);
-        let mark = |file: &mut TrackedFile| file.status = status;
-        self.update(path, mark)
+        match status {
+            Status::Lock => {
+                let lock = |file: &mut TrackedFile| file.locked = Some(true);
+                return self.update(path, lock);
+            }
+            Status::Unlock => {
+                let unlock = |file: &mut TrackedFile| {
+                    if file.locked.is_some() {
+                        file.locked = None;
+                    }
+                };
+                return self.update(path, unlock);
+            }
+            _ => {
+                let mark = |file: &mut TrackedFile| file.status = status;
+                return self.update(path, mark);
+            }
+        }
     }
 
     /// Get file in records
@@ -201,21 +228,6 @@ impl Records {
         self.update(path, sync)
     }
 
-    /// Lock file
-    pub fn lock(&mut self, path: &PathBuf) -> Result<TrackedFile, Error> {
-        let lock = |file: &mut TrackedFile| file.locked = Some(true);
-        self.update(path, lock)
-    }
-
-    /// Unlock file
-    pub fn unlock(&mut self, path: &PathBuf) -> Result<TrackedFile, Error> {
-        let unlock = |file: &mut TrackedFile| {
-            if file.locked.is_some() {
-                file.locked = None;
-            }
-        };
-        self.update(path, unlock)
-    }
     /// Check if records contains the file
     pub fn contains(&self, path: &PathBuf) -> bool {
         let path = unify(&path);

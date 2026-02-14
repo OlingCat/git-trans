@@ -95,21 +95,21 @@ pub enum Commands {
     Log,
     /// Show files in a specific state
     Show {
-        /// Action to perform on the files
+        /// Show
         #[command(subcommand)]
         status: Status,
     },
     /// Mark files as given status
     #[command(arg_required_else_help = true)]
     Mark {
-        /// Action to perform on the files
+        /// Mark files as given status
         #[command(subcommand)]
-        status: CmdStatus,
+        status: MarkStatus,
     },
 }
 
 #[derive(Subcommand)]
-pub enum CmdStatus {
+pub enum MarkStatus {
     Todo {
         path: PathBuf,
     },
@@ -125,16 +125,24 @@ pub enum CmdStatus {
     Synced {
         path: PathBuf,
     },
+    Lock {
+        path: PathBuf,
+    },
+    Unlock {
+        path: PathBuf,
+    },
 }
 
-impl From<CmdStatus> for Status {
-    fn from(cmd_status: CmdStatus) -> Self {
-        match cmd_status {
-            CmdStatus::Todo { .. } => Status::Todo,
-            CmdStatus::ToReview { .. } => Status::ToReview,
-            CmdStatus::Done { .. } => Status::Done,
-            CmdStatus::Unsynced { .. } => Status::Unsynced,
-            CmdStatus::Synced { .. } => Status::Synced,
+impl From<MarkStatus> for Status {
+    fn from(mark_status: MarkStatus) -> Self {
+        match mark_status {
+            MarkStatus::Todo { .. } => Status::Todo,
+            MarkStatus::ToReview { .. } => Status::ToReview,
+            MarkStatus::Done { .. } => Status::Done,
+            MarkStatus::Unsynced { .. } => Status::Unsynced,
+            MarkStatus::Synced { .. } => Status::Synced,
+            MarkStatus::Lock { .. } => Status::Lock,
+            MarkStatus::Unlock { .. } => Status::Unlock,
         }
     }
 }
