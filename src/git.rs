@@ -45,7 +45,7 @@ pub fn get_prefix() -> Option<PathBuf> {
 }
 
 /// Get the revision from a tag
-pub fn get_tag_revision(tag: &String) -> Option<String> {
+pub fn get_tag_rev(tag: &String) -> Option<String> {
     let revision = Command::new("git")
         .args(["rev-parse", tag])
         .output()
@@ -61,7 +61,7 @@ pub fn get_tag_revision(tag: &String) -> Option<String> {
 }
 
 /// Get the current revision of a file
-pub fn get_file_revision(path: &PathBuf) -> String {
+pub fn get_file_rev(path: &PathBuf) -> String {
     let file_revision = Command::new("git")
         .args(["log", "-n", "1", "--pretty=format:%H", "--"])
         .arg(path)

@@ -88,7 +88,7 @@ impl Records {
     pub fn init(lang: &String, tag: &String) -> Result<Records, Error> {
         let root_dir: PathBuf = get_root_dir().unwrap();
         let project_name = root_dir.file_name().unwrap().to_str().unwrap().to_string();
-        if let Some(rev) = get_tag_revision(tag) {
+        if let Some(rev) = get_tag_rev(tag) {
             return Ok(Records {
                 meta: Meta {
                     project_name: project_name,
@@ -117,7 +117,7 @@ impl Records {
         let path_rel_to_root = get_path_rel_to_root(&path);
         let file = TrackedFile {
             path: path_rel_to_root,
-            track_rev: get_file_revision(&path),
+            track_rev: get_file_rev(&path),
             progress: Progress::Todo,
             synced: true,
             locked: if lock { Some(true) } else { None },
@@ -192,8 +192,8 @@ impl Records {
                 Progress::Review => "R".yellow(),
                 Progress::Done => "D".green(),
             };
-            let synced = if file.synced == true { "S".bright_blue() } else { "-".white() };
-            let lock = if file.locked == Some(true) { "L".bright_green() } else { "-".white() };
+            let synced = if file.synced == true { "S".bright_blue() } else { "-".truecolor(128, 128, 128) };
+            let lock = if file.locked == Some(true) { "L".bright_green() } else { "-".truecolor(128, 128, 128) };
             println!("{prog}{synced}{lock}\t{}", file.path.display());
         }
     }
@@ -205,8 +205,13 @@ impl Records {
             println!("\nNo files are in the {:?} status.", prog);
             return;
         }
+        let prog = match prog {
+            Progress::Todo => "Todo".red(),
+            Progress::Review => "Review".yellow(),
+            Progress::Done => "Done".green(),
+        };
         for file in files {
-            println!("{}\t{}", file.progress, file.path.display());
+            println!("{}\t{}", prog, file.path.display());
         }
     }
 
@@ -255,10 +260,22 @@ impl Records {
     /// Sync file revision in records
     pub fn set_synced(&mut self, path: &PathBuf) -> Result<TrackedFile, Error> {
         let sync = |file: &mut TrackedFile| {
-            file.track_rev = get_file_revision(&path);
+            file.track_rev = get_file_rev(&path);
             file.synced = true;
         };
         self.update(path, sync)
+    }
+
+    /// Update sync status for all files
+    pub fn update_sync(&mut self) {
+        for file in self.files.iter_mut() {
+            if file.track_rev == get_file_rev(&file.path) {
+                file.synced = true;
+            } else {
+                file.synced = false;
+            }
+        }
+        self.save().unwrap();
     }
 
     /// Lock file in records

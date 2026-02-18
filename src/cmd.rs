@@ -1,8 +1,6 @@
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
-use crate::records::Progress;
-
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -57,17 +55,14 @@ pub enum Commands {
     /// Diff file changes
     #[command(arg_required_else_help = true)]
     Diff {
+        /// Generate diff files
+        #[arg(short, long)]
+        gendiff: bool,
         /// File to diff with latest revision
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
-    /// Generate diff file
-    #[command(arg_required_else_help = true)]
-    Gendiff {
-        /// File to generate diff with latest revision
-        #[arg(required = true)]
-        path_args: Vec<PathBuf>,
-    },
+
     /// Sync file with latest revision
     #[command(arg_required_else_help = true)]
     Sync {
@@ -75,25 +70,27 @@ pub enum Commands {
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
-    /// Lock file
+    /// Update sync status for all files
+    Update,
+    /// Lock files in the records
     Lock {
         /// Files to lock
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
-    /// Unlock file
+    /// Unlock files in the records
     Unlock {
         /// Files to unlock
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
-    /// Cover files in repo root folder
+    /// Cover the .trans folder into the repo folder
     Cover,
     /// Reset the root folder to the latest revision
     Reset,
     /// Show logs in the .trans folder
     Log,
-    /// Show files in a specific state
+    /// Show files in a given status
     #[command(arg_required_else_help = true)]
     Show {
         #[command(subcommand)]

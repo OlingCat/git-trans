@@ -104,19 +104,16 @@ pub fn main() -> Result<(), Error> {
                     );
                     Ok(())
                 }
-                Diff { path_args: path } => {
+                Diff { path_args: path, gendiff } => {
                     let path = &path[0].to_path_buf();
                     let old_rev = records.get(path).unwrap().track_rev;
-                    let new_rev = get_file_revision(path);
-                    println!("{}", get_diff(path, &old_rev, &new_rev));
-                    Ok(())
-                }
-                Gendiff { path_args: path } => {
-                    let path = &path[0].to_path_buf();
-                    let old_rev = records.get(path).unwrap().track_rev;
-                    let new_rev = get_file_revision(path);
+                    let new_rev = get_file_rev(path);
                     let diff_file = get_diff(path, &old_rev, &new_rev);
-                    write_diff_file_to_trans(path, &diff_file)?;
+                    if *gendiff {
+                        write_diff_file_to_trans(path, &diff_file)?;
+                    } else {
+                        println!("{}", diff_file);
+                    }
                     Ok(())
                 }
                 Cover => {
@@ -161,6 +158,11 @@ pub fn main() -> Result<(), Error> {
                 Sync { path_args: path } => {
                     let path = &path[0].to_path_buf();
                     records.set_synced(path);
+                    Ok(())
+                }
+                /// Update sync status for all files
+                Update => {
+                    records.update_sync();
                     Ok(())
                 }
                 Lock { path_args: path } => {
