@@ -49,13 +49,29 @@ git log -- .trans/
 ## Todo list
 
 - [x] init
-- [x] add
-- [x] rm
-- [ ] ls
-- [ ] status
-- [x] log
-- [x] diff
-- [x] gendiff
-- [x] sync
+- [x] add <file>
+- [x] rm <file>
+- [ ] ls  列出当前文件夹下所有记录的文件，-r 递归
+- [ ] status  显示所有 todo，review 和 unsynced 的文件，-a 显示所有文件状态
+- [x] log  显示 .trans 文件夹下所有文件的修改历史
+- [ ] info <file>
+- [x] diff <file>
+- [x] gendiff <file>
+- [x] sync <file>  同步文件到最新版本
 - [x] cover
 - [x] reset
+- [x] show
+  + [ ] all
+  + [x] todo
+  + [x] review
+  + [x] done
+  + [x] synced
+  + [x] unsynced
+  + [x] locked
+  + [x] unlocked
+- [x] mark
+  + [x] todo
+  + [x] review
+  + [x] done
+- [x] lock
+- [x] unlock

@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
-use crate::records::Status;
+use crate::records::Progress;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -52,7 +52,7 @@ pub enum Commands {
         #[arg(short, long, exclusive = true)]
         all: bool,
     },
-    /// Check if the file is synchronized
+    /// Show todo, review, and unsynced files
     Status,
     /// Diff file changes
     #[command(arg_required_else_help = true)]
@@ -94,59 +94,43 @@ pub enum Commands {
     /// Show logs in the .trans folder
     Log,
     /// Show files in a specific state
+    #[command(arg_required_else_help = true)]
     Show {
-        /// Show
         #[command(subcommand)]
-        status: Status,
+        status: ShowStatus,
     },
     /// Mark files as given status
     #[command(arg_required_else_help = true)]
     Mark {
-        /// Mark files as given status
         #[command(subcommand)]
-        status: MarkStatus,
+        status: MarkProgress,
     },
 }
 
 #[derive(Subcommand)]
-pub enum MarkStatus {
+pub enum ShowStatus {
+    All,
+    Todo,
+    Review,
+    Done,
+    Synced,
+    Unsynced,
+    Locked,
+    Unlocked,
+}
+
+#[derive(Subcommand)]
+pub enum MarkProgress {
     Todo {
         path: PathBuf,
     },
-    ToReview {
+    Review {
         path: PathBuf,
     },
     Done {
         path: PathBuf,
     },
-    Unsynced {
-        path: PathBuf,
-    },
-    Synced {
-        path: PathBuf,
-    },
-    Lock {
-        path: PathBuf,
-    },
-    Unlock {
-        path: PathBuf,
-    },
 }
-
-impl From<MarkStatus> for Status {
-    fn from(mark_status: MarkStatus) -> Self {
-        match mark_status {
-            MarkStatus::Todo { .. } => Status::Todo,
-            MarkStatus::ToReview { .. } => Status::ToReview,
-            MarkStatus::Done { .. } => Status::Done,
-            MarkStatus::Unsynced { .. } => Status::Unsynced,
-            MarkStatus::Synced { .. } => Status::Synced,
-            MarkStatus::Lock { .. } => Status::Lock,
-            MarkStatus::Unlock { .. } => Status::Unlock,
-        }
-    }
-}
-
 
 #[derive(Args)]
 pub struct PathArgs {

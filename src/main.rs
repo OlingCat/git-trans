@@ -6,7 +6,6 @@ use log::{debug, error, info};
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
 use std::path::{Path, PathBuf};
-use Commands::Status as Cmdstatus;
 use Commands::*;
 
 mod cmd;
@@ -17,7 +16,7 @@ mod utils;
 use cmd::*;
 use git::*;
 use records::*;
-use records::Status;
+use records::Progress;
 use utils::*;
 
 #[allow(unused)]
@@ -117,17 +116,10 @@ pub fn main() -> Result<(), Error> {
                     let old_rev = records.get(path).unwrap().track_rev;
                     let new_rev = get_file_revision(path);
                     let diff_file = get_diff(path, &old_rev, &new_rev);
-                    // this will write diff file to .trans dir
                     write_diff_file_to_trans(path, &diff_file)?;
                     Ok(())
                 }
-                Sync { path_args: path } => {
-                    let path = &path[0].to_path_buf();
-                    records.sync(path);
-                    Ok(())
-                }
                 Cover => {
-                    debug!("copy files in .trans dir to root dir");
                     let count = cover()?;
                     Ok(())
                 }
@@ -139,37 +131,49 @@ pub fn main() -> Result<(), Error> {
                     println!("{}", get_log(&get_trans_dir()));
                     Ok(())
                 }
-                Cmdstatus => {
-                    debug!("'git trans status' was run");
-                    for status in Status::iter() {
-                        records.show(status);
+                Status => {
+                    for prog in Progress::iter() {
+                        records.show_progress(prog);
                     }
                     Ok(())
                 }
                 Show { status } => {
                     match status {
-                        Status::Todo => records.show(Status::Todo),
-                        Status::ToReview => records.show(Status::ToReview),
-                        Status::Done => records.show(Status::Done),
-                        Status::Unsynced => records.show(Status::Unsynced),
-                        Status::Synced => records.show(Status::Synced),
-                        Status::Lock => records.show(Status::Lock),
-                        Status::Unlock => records.show(Status::Unlock),
+                        ShowStatus::All => records.show_all(),
+                        ShowStatus::Todo => records.show_progress(Progress::Todo),
+                        ShowStatus::Review => records.show_progress(Progress::Review),
+                        ShowStatus::Done => records.show_progress(Progress::Done),
+                        ShowStatus::Synced => records.show_synced(true),
+                        ShowStatus::Unsynced => records.show_synced(false),
+                        ShowStatus::Locked => records.show_locked(true),
+                        ShowStatus::Unlocked => records.show_locked(false),
                     }
                     Ok(())
                 }
                 Mark { status } => {
                     match status {
-                        MarkStatus::Todo { path } => { records.mark(Status::Todo, path)?; }
-                        MarkStatus::ToReview { path } => { records.mark(Status::ToReview, path)?; }
-                        MarkStatus::Done { path } => { records.mark(Status::Done, path)?; }
-                        MarkStatus::Unsynced { path } => { records.mark(Status::Unsynced, path)?; }
-                        MarkStatus::Synced { path } => { records.mark(Status::Synced, path)?; }
-                        MarkStatus::Lock { path } => { records.mark(Status::Lock, path)?; }
-                        MarkStatus::Unlock { path } => { records.mark(Status::Unlock, path)?; }
+                        MarkProgress::Todo { path } => { records.mark_progress(Progress::Todo, path)?; }
+                        MarkProgress::Review { path } => { records.mark_progress(Progress::Review, path)?; }
+                        MarkProgress::Done { path } => { records.mark_progress(Progress::Done, path)?; }
                     }
                     Ok(())
                 }
+                Sync { path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    records.set_synced(path);
+                    Ok(())
+                }
+                Lock { path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    records.set_lock(true, path)?;
+                    Ok(())
+                }
+                Unlock { path_args: path } => {
+                    let path = &path[0].to_path_buf();
+                    records.set_lock(false, path)?;
+                    Ok(())
+                }
+
                 _ => todo!(),
             }
         }
