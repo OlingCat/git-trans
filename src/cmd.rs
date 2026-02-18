@@ -106,24 +106,35 @@ pub enum Commands {
 
 #[derive(Subcommand)]
 pub enum ShowStatus {
+    /// Show all files
     All,
+    /// Show todo files
     Todo,
+    /// Show review files
     Review,
+    /// Show done files
     Done,
+    /// Show synced files
     Synced,
+    /// Show unsynced files
     Unsynced,
+    /// Show locked files
     Locked,
+    /// Show unlocked files
     Unlocked,
 }
 
 #[derive(Subcommand)]
 pub enum MarkProgress {
+    /// Mark file as todo
     Todo {
         path: PathBuf,
     },
+    /// Mark file as review
     Review {
         path: PathBuf,
     },
+    /// Mark file as done
     Done {
         path: PathBuf,
     },
@@ -131,5 +142,6 @@ pub enum MarkProgress {
 
 #[derive(Args)]
 pub struct PathArgs {
+    /// Path to the file
     pub path: Option<PathBuf>,
 }

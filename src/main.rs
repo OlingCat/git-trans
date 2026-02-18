@@ -160,7 +160,6 @@ pub fn main() -> Result<(), Error> {
                     records.set_synced(path);
                     Ok(())
                 }
-                /// Update sync status for all files
                 Update => {
                     records.update_sync();
                     Ok(())
