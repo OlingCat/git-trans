@@ -46,15 +46,6 @@ pub enum Progress {
     Done,
 }
 
-impl Progress {
-    /// Iterate through every possible `Status` variant.
-    pub fn iter() -> impl Iterator<Item = Progress> {
-        [Progress::Trans, Progress::Review, Progress::Done]
-            .iter()
-            .cloned()
-    }
-}
-
 impl FromStr for Progress {
     type Err = ();
 
