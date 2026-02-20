@@ -9,9 +9,8 @@ git trans init
 git trans add <file>...
 git trans ls -a|-r
 git trans rm
-git trans status
-git trans diff <file>...
-git trans gendiff <file>...
+git trans todo
+git trans diff <file>... -g
 git trans sync <file>...
 git trans cover
 # build
@@ -52,7 +51,7 @@ git log -- .trans/
 - [x] add <file>
 - [x] rm <file>
 - [ ] ls  列出当前文件夹下所有记录的文件，-r 递归
-- [ ] status  显示所有 todo，review 和 unsynced 的文件，-a 显示所有文件状态
+- [ ] todo 显示所有 trans，review 和 unsynced 的文件，-a 显示所有文件状态
 - [x] log  显示 .trans 文件夹下所有文件的修改历史
 - [ ] info <file>
 - [x] diff <file>

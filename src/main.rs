@@ -122,10 +122,13 @@ pub fn main() -> Result<(), Error> {
                     println!("{}", get_log(&get_trans_dir()));
                     Ok(())
                 }
-                Status => {
-                    for prog in Progress::iter() {
-                        records.show_progress(prog);
-                    }
+                Todo => {
+                    println!("Need translate:");
+                    records.show_progress(Progress::Trans);
+                    println!("Need review:");
+                    records.show_progress(Progress::Review);
+                    println!("Need sync:");
+                    records.show_synced(false);
                     Ok(())
                 }
                 Show { status } => {

@@ -185,7 +185,7 @@ impl Records {
             println!("No files in records.");
             return;
         }
-        println!("{}, {}, {} | {} | {}", "T: Todo".red(), "R: Review".yellow(), "D: Done".green(), "S: Synced".bright_blue(), "L: Locked".bright_green());
+        println!("{}, {}, {} | {} | {}", "T: Trans".red(), "R: Review".yellow(), "D: Done".green(), "S: Synced".bright_blue(), "L: Locked".bright_green());
         for file in self.files.iter() {
             let prog = match file.progress {
                 Progress::Trans => "T".red(),
@@ -206,7 +206,7 @@ impl Records {
             return;
         }
         let prog = match prog {
-            Progress::Trans => "Todo".red(),
+            Progress::Trans => "Trans".red(),
             Progress::Review => "Review".yellow(),
             Progress::Done => "Done".green(),
         };

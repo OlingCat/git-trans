@@ -50,8 +50,8 @@ pub enum Commands {
         #[arg(short, long, exclusive = true)]
         all: bool,
     },
-    /// Show todo, review, and unsynced files
-    Status,
+    /// Show trans, review, and unsynced files
+    Todo,
     /// Diff file changes
     #[command(arg_required_else_help = true)]
     Diff {
