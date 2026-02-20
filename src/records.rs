@@ -39,7 +39,7 @@ pub struct Meta {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Subcommand, ValueEnum)]
 pub enum Progress {
     /// File is to be translated
-    Todo,
+    Trans,
     /// File is to be reviewed
     Review,
     /// File is done
@@ -49,7 +49,7 @@ pub enum Progress {
 impl Progress {
     /// Iterate through every possible `Status` variant.
     pub fn iter() -> impl Iterator<Item = Progress> {
-        [Progress::Todo, Progress::Review, Progress::Done]
+        [Progress::Trans, Progress::Review, Progress::Done]
             .iter()
             .cloned()
     }
@@ -60,8 +60,8 @@ impl FromStr for Progress {
 
     fn from_str(input: &str) -> Result<Progress, Self::Err> {
         match input {
-            "Todo" => Ok(Progress::Todo),
-            "ToReview" => Ok(Progress::Review),
+            "Trans" => Ok(Progress::Trans),
+            "Review" => Ok(Progress::Review),
             "Done" => Ok(Progress::Done),
             _ => Err(()),
         }
@@ -118,7 +118,7 @@ impl Records {
         let file = TrackedFile {
             path: path_rel_to_root,
             track_rev: get_file_rev(&path),
-            progress: Progress::Todo,
+            progress: Progress::Trans,
             synced: true,
             locked: if lock { Some(true) } else { None },
         };
@@ -188,7 +188,7 @@ impl Records {
         println!("{}, {}, {} | {} | {}", "T: Todo".red(), "R: Review".yellow(), "D: Done".green(), "S: Synced".bright_blue(), "L: Locked".bright_green());
         for file in self.files.iter() {
             let prog = match file.progress {
-                Progress::Todo => "T".red(),
+                Progress::Trans => "T".red(),
                 Progress::Review => "R".yellow(),
                 Progress::Done => "D".green(),
             };
@@ -206,7 +206,7 @@ impl Records {
             return;
         }
         let prog = match prog {
-            Progress::Todo => "Todo".red(),
+            Progress::Trans => "Todo".red(),
             Progress::Review => "Review".yellow(),
             Progress::Done => "Done".green(),
         };

@@ -33,29 +33,23 @@ pub fn main() -> Result<(), Error> {
 
     // get repo dir
     let root_dir: PathBuf = get_root_dir().unwrap();
-    debug!("repo dir: {:?}", root_dir);
-
     // get .trans dir
     let trans_dir = get_trans_dir();
-    debug!(".trans dir: {:?}", trans_dir);
-
     // get records.toml file
     let records_toml = get_records_toml();
-    debug!("records.toml: {:?}", records_toml);
 
     match &cli.command {
         // init .trans folder
         Init { lang, tag } => {
-            info!("'git trans init' was run");
             let content = toml::to_string(&Records::init(lang, tag).unwrap()).unwrap();
             create_file_with_dirs(records_toml)
                 .and_then(|mut file| {
-                    info!("文件 .trans/records.toml 创建成功");
+                    info!("File .trans/records.toml created.");
                     file.write_all(content.as_bytes());
                     Ok(())
                 })
                 .or_else(|err| {
-                    error!("文件 .trans/records.toml 创建失败");
+                    error!("File .trans/records.toml created failed.");
                     Err(err)
                 })
         }
@@ -137,7 +131,7 @@ pub fn main() -> Result<(), Error> {
                 Show { status } => {
                     match status {
                         ShowStatus::All => records.show_all(),
-                        ShowStatus::Todo => records.show_progress(Progress::Todo),
+                        ShowStatus::Trans => records.show_progress(Progress::Trans),
                         ShowStatus::Review => records.show_progress(Progress::Review),
                         ShowStatus::Done => records.show_progress(Progress::Done),
                         ShowStatus::Synced => records.show_synced(true),
@@ -149,7 +143,7 @@ pub fn main() -> Result<(), Error> {
                 }
                 Mark { status } => {
                     match status {
-                        MarkProgress::Todo { path } => { records.mark_progress(Progress::Todo, path)?; }
+                        MarkProgress::Trans { path } => { records.mark_progress(Progress::Trans, path)?; }
                         MarkProgress::Review { path } => { records.mark_progress(Progress::Review, path)?; }
                         MarkProgress::Done { path } => { records.mark_progress(Progress::Done, path)?; }
                     }

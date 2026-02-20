@@ -60,6 +60,7 @@ pub fn cover() -> Result<u64> {
     copy_dir_recursive(&from, &to_root, &from)
 }
 
+// TODO: 改成按照 records 记录来覆盖
 /// Recursively walk a source directory and copy all files to the destination root,
 /// preserving the tree structure. `base` is the top of the recursion and is used
 /// to compute the relative path for each entry. The function returns the number of

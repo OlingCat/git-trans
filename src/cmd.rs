@@ -109,7 +109,7 @@ pub enum ShowStatus {
     /// Show all files
     All,
     /// Show todo files
-    Todo,
+    Trans,
     /// Show review files
     Review,
     /// Show done files
@@ -126,8 +126,8 @@ pub enum ShowStatus {
 
 #[derive(Subcommand)]
 pub enum MarkProgress {
-    /// Mark file as todo
-    Todo {
+    /// Mark file as translate
+    Trans {
         path: PathBuf,
     },
     /// Mark file as review

@@ -70,7 +70,7 @@ git log -- .trans/
   + [x] locked
   + [x] unlocked
 - [x] mark
-  + [x] todo
+  + [x] trans
   + [x] review
   + [x] done
 - [x] lock
