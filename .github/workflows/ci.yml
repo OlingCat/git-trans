@@ -1,10 +1,15 @@
 name: Rust CI
 
 on:
+  workflow_dispatch: # 允许你手动点击运行
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
@@ -13,6 +18,7 @@ jobs:
   build_and_test:
     name: Rust Project - Build and Test
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout code
@@ -22,6 +28,14 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          # (可选) 如果你有多个项目在子目录中，可以指定
+          # workload-column: ./my-sub-project
+          # (可选) 额外的缓存 key 补丁
+          key: "v1"
 
       # 1. 检查代码格式 (相当于执行 cargo fmt --check)
       - name: Check formatting
@@ -34,27 +48,3 @@ jobs:
       # 3. 运行测试
       - name: Run tests
         run: cargo test --verbose
-
-      # 4. Clone the repository
-      - name: Clone repository
-        run: |
-          # 4.1 设置 SSH 代理并加载私钥
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          chmod 700 ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          # 4.2 克隆目标仓库
-          git clone --depth 1 git@github.com:Rocq-zh/SF-zh.git
-          cd SF-zh
-          git checkout -b next
-          cp -LRf ../Cargo.toml .
-          # 4.3 提交并推送变更
-          git add .
-          # 只有在有变动时才提交
-          if ! git diff-index --quiet HEAD; then
-            git commit -m "r$GITHUB_RUN_NUMBER"
-            git push -f origin next
-          else
-            echo "No changes to deploy."
-          fi
