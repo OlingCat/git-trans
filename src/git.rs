@@ -96,7 +96,14 @@ pub fn get_log(path: &PathBuf) -> String {
 /// Reset the root folder to the latest revision
 pub fn reset() -> Result<(), Box<dyn Error>> {
     let output = Command::new("git")
-        .args(["restore", "--source=HEAD", "--staged", "--worktree", ".", ":(exclude).trans/"])
+        .args([
+            "restore",
+            "--source=HEAD",
+            "--staged",
+            "--worktree",
+            ".",
+            ":(exclude).trans/",
+        ])
         .output()?;
 
     if output.status.success() {

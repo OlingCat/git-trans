@@ -127,17 +127,11 @@ pub enum ShowStatus {
 #[derive(Subcommand)]
 pub enum MarkProgress {
     /// Mark file as translate
-    Trans {
-        path: PathBuf,
-    },
+    Trans { path: PathBuf },
     /// Mark file as review
-    Review {
-        path: PathBuf,
-    },
+    Review { path: PathBuf },
     /// Mark file as done
-    Done {
-        path: PathBuf,
-    },
+    Done { path: PathBuf },
 }
 
 #[derive(Args)]

@@ -176,15 +176,30 @@ impl Records {
             println!("No files in records.");
             return;
         }
-        println!("{}, {}, {} | {} | {}", "T: Trans".red(), "R: Review".yellow(), "D: Done".green(), "S: Synced".bright_blue(), "L: Locked".bright_green());
+        println!(
+            "{}, {}, {} | {} | {}",
+            "T: Trans".red(),
+            "R: Review".yellow(),
+            "D: Done".green(),
+            "S: Synced".bright_blue(),
+            "L: Locked".bright_green()
+        );
         for file in self.files.iter() {
             let prog = match file.progress {
                 Progress::Trans => "T".red(),
                 Progress::Review => "R".yellow(),
                 Progress::Done => "D".green(),
             };
-            let synced = if file.synced == true { "S".bright_blue() } else { "-".truecolor(128, 128, 128) };
-            let lock = if file.locked == Some(true) { "L".bright_green() } else { "-".truecolor(128, 128, 128) };
+            let synced = if file.synced == true {
+                "S".bright_blue()
+            } else {
+                "-".truecolor(128, 128, 128)
+            };
+            let lock = if file.locked == Some(true) {
+                "L".bright_green()
+            } else {
+                "-".truecolor(128, 128, 128)
+            };
             println!("{prog}{synced}{lock}\t{}", file.path.display());
         }
     }
@@ -209,13 +224,20 @@ impl Records {
     pub fn show_synced(&self, synced: bool) {
         let files = self.files.iter().filter(|file| file.synced == synced);
         if files.clone().count() == 0 {
-            println!("\nNo files are {}.", if synced { "Synced" } else { "Unsynced" });
+            println!(
+                "\nNo files are {}.",
+                if synced { "Synced" } else { "Unsynced" }
+            );
             return;
         }
         for file in files {
             println!(
                 "{}\t{}",
-                if file.synced { "Synced".bright_blue() } else { "Unsynced".blue() },
+                if file.synced {
+                    "Synced".bright_blue()
+                } else {
+                    "Unsynced".blue()
+                },
                 file.path.display()
             );
         }
@@ -230,13 +252,20 @@ impl Records {
             }
         });
         if files.clone().count() == 0 {
-            println!("\nNo files are {}.", if locked { "Locked" } else { "Unlocked" });
+            println!(
+                "\nNo files are {}.",
+                if locked { "Locked" } else { "Unlocked" }
+            );
             return;
         }
         for file in files {
             println!(
                 "{}\t{}",
-                if locked == true { "Locked".bright_green() } else { "Unlocked".green() },
+                if locked == true {
+                    "Locked".bright_green()
+                } else {
+                    "Unlocked".green()
+                },
                 file.path.display()
             );
         }

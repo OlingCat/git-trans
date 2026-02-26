@@ -1,6 +1,6 @@
 use core::convert::AsRef;
 use std::fs::{self, File, OpenOptions};
-use std::io::{ Error, ErrorKind, Result, Write };
+use std::io::{Error, ErrorKind, Result, Write};
 use std::path::{Path, PathBuf, StripPrefixError};
 
 use log::debug;
@@ -114,8 +114,7 @@ pub fn absolute_to_relative<P: AsRef<Path>, Q: AsRef<Path>>(
 ) -> std::result::Result<PathBuf, StripPrefixError> {
     let base = base.as_ref();
     let path = path.as_ref();
-    path.strip_prefix(base)
-        .map(PathBuf::from)
+    path.strip_prefix(base).map(PathBuf::from)
 }
 
 /// Convert a path to a unix style path
@@ -128,10 +127,7 @@ pub fn get_path_rel_to_root(path: &PathBuf) -> PathBuf {
     let root_dir: PathBuf = get_root_dir().unwrap();
     let path = unify(&path);
     return unify(
-        &absolute_to_relative::<PathBuf, PathBuf>(
-            root_dir,
-            fs::canonicalize(&path).unwrap(),
-        )
-        .unwrap(),
+        &absolute_to_relative::<PathBuf, PathBuf>(root_dir, fs::canonicalize(&path).unwrap())
+            .unwrap(),
     );
 }

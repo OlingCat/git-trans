@@ -1,12 +1,12 @@
+use Commands::*;
+use clap::Parser;
 #[allow(unused)]
 use clap::error::ErrorKind as ClapErrorKind;
-use clap::Parser;
 use core::todo;
 use log::{debug, error, info};
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
 use std::path::{Path, PathBuf};
-use Commands::*;
 
 mod cmd;
 mod git;
@@ -15,8 +15,8 @@ mod utils;
 
 use cmd::*;
 use git::*;
-use records::*;
 use records::Progress;
+use records::*;
 use utils::*;
 
 #[allow(unused)]
@@ -69,7 +69,10 @@ pub fn main() -> Result<(), Error> {
             let mut records: Records = toml::from_str(&records_str).unwrap();
 
             match &cli.command {
-                Add { path_args: path, lock } => {
+                Add {
+                    path_args: path,
+                    lock,
+                } => {
                     let path = path[0].to_path_buf();
                     let path_rel_to_root = get_path_rel_to_root(&path);
 
@@ -98,7 +101,10 @@ pub fn main() -> Result<(), Error> {
                     );
                     Ok(())
                 }
-                Diff { path_args: path, gendiff } => {
+                Diff {
+                    path_args: path,
+                    gendiff,
+                } => {
                     let path = &path[0].to_path_buf();
                     let old_rev = records.get(path).unwrap().track_rev;
                     let new_rev = get_file_rev(path);
@@ -146,9 +152,15 @@ pub fn main() -> Result<(), Error> {
                 }
                 Mark { status } => {
                     match status {
-                        MarkProgress::Trans { path } => { records.mark_progress(Progress::Trans, path)?; }
-                        MarkProgress::Review { path } => { records.mark_progress(Progress::Review, path)?; }
-                        MarkProgress::Done { path } => { records.mark_progress(Progress::Done, path)?; }
+                        MarkProgress::Trans { path } => {
+                            records.mark_progress(Progress::Trans, path)?;
+                        }
+                        MarkProgress::Review { path } => {
+                            records.mark_progress(Progress::Review, path)?;
+                        }
+                        MarkProgress::Done { path } => {
+                            records.mark_progress(Progress::Done, path)?;
+                        }
                     }
                     Ok(())
                 }

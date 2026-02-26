@@ -1,0 +1,60 @@
+name: Rust CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test:
+    name: Rust Project - Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # 1. 检查代码格式 (相当于执行 cargo fmt --check)
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      # 2. 运行 Clippy (Rust 的静态检查工具，类似于 Linter)
+      - name: Run clippy
+        run: cargo clippy -- -D warnings
+
+      # 3. 运行测试
+      - name: Run tests
+        run: cargo test --verbose
+
+      # 4. Clone the repository
+      - name: Clone repository
+        run: |
+          # 4.1 设置 SSH 代理并加载私钥
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          chmod 700 ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          # 4.2 克隆目标仓库
+          git clone --depth 1 git@github.com:Rocq-zh/SF-zh.git
+          cd SF-zh
+          git checkout -b next
+          cp -LRf ../Cargo.toml .
+          # 4.3 提交并推送变更
+          git add .
+          # 只有在有变动时才提交
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "r$GITHUB_RUN_NUMBER"
+            git push -f origin next
+          else
+            echo "No changes to deploy."
+          fi
