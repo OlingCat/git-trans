@@ -1,4 +1,4 @@
-use std::{error::Error, fs, path::PathBuf, process::Command};
+use std::{error::Error, fs, path::Path, path::PathBuf, process::Command};
 
 /// Get the root directory of the git repository
 pub fn get_root_dir() -> Option<PathBuf> {
@@ -21,10 +21,11 @@ pub fn get_root_dir() -> Option<PathBuf> {
     if cfg!(windows) {
         return Some(PathBuf::from(absolute_path.replace("/", "\\")));
     }
-    return Some(PathBuf::from(absolute_path));
+    Some(PathBuf::from(absolute_path))
 }
 
 /// Get current directory path prefix
+#[allow(dead_code)]
 pub fn get_prefix() -> Option<PathBuf> {
     let prefix = Command::new("git")
         .args(["rev-parse", "--show-prefix"])
@@ -41,7 +42,7 @@ pub fn get_prefix() -> Option<PathBuf> {
     if cfg!(windows) {
         return Some(PathBuf::from(prefix.replace("/", "\\")));
     }
-    return Some(PathBuf::from(prefix));
+    Some(PathBuf::from(prefix))
 }
 
 /// Get the revision from a tag
@@ -49,7 +50,7 @@ pub fn get_tag_rev(tag: &String) -> Option<String> {
     let revision = Command::new("git")
         .args(["rev-parse", tag])
         .output()
-        .expect(format!("failed to execute: git rev-parse {}", tag).as_str());
+        .unwrap_or_else(|_| panic!("failed to execute: git rev-parse {}", tag));
 
     if revision.status.code().unwrap() != 0 {
         eprintln!("not a git revision");
@@ -57,40 +58,37 @@ pub fn get_tag_rev(tag: &String) -> Option<String> {
     }
 
     let revision = String::from_utf8_lossy(&revision.stdout).trim().to_string();
-    return Some(revision);
+    Some(revision)
 }
 
 /// Get the current revision of a file
-pub fn get_file_rev(path: &PathBuf) -> String {
+pub fn get_file_rev(path: &Path) -> String {
     let file_revision = Command::new("git")
         .args(["log", "-n", "1", "--pretty=format:%H", "--"])
         .arg(path)
         .output()
         .expect("failed to execute: git log -n 1 --pretty=format:%H -- <path>");
-    let file_revision = String::from_utf8_lossy(&file_revision.stdout)
+    String::from_utf8_lossy(&file_revision.stdout)
         .trim()
-        .to_string();
-    return file_revision;
+        .to_string()
 }
 
 /// Get diff between two revisions of a file
-pub fn get_diff(path: &PathBuf, old_rev: &str, new_rev: &str) -> String {
+pub fn get_diff(path: &Path, old_rev: &str, new_rev: &str) -> String {
     let diff = Command::new("git")
         .args(["diff", old_rev, new_rev, path.to_str().unwrap()])
         .output()
         .expect("failed to execute: git diff {old_rev} {new_rev} {path}");
-    let diff = String::from_utf8_lossy(&diff.stdout).to_string();
-    return diff;
+    String::from_utf8_lossy(&diff.stdout).to_string()
 }
 
 /// Show logs in the .trans folder
-pub fn get_log(path: &PathBuf) -> String {
+pub fn get_log(path: &Path) -> String {
     let log = Command::new("git")
         .args(["log", "--", path.to_str().unwrap()])
         .output()
         .expect("failed to execute: git log -- {path}");
-    let log = String::from_utf8_lossy(&log.stdout).to_string();
-    return log;
+    String::from_utf8_lossy(&log.stdout).to_string()
 }
 
 /// Reset the root folder to the latest revision
@@ -109,6 +107,8 @@ pub fn reset() -> Result<(), Box<dyn Error>> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(format!("failed to execute: git reset --hard HEAD -- . :!.trans/").into())
+        Err("failed to execute: git reset --hard HEAD -- . :!.trans/"
+            .to_string()
+            .into())
     }
 }

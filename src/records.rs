@@ -2,12 +2,13 @@ use chrono::Local;
 use clap::{Subcommand, ValueEnum};
 use colored::*;
 use core::{option::Option::None, result::Result};
-use log::debug;
+// use log::debug;
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
     fs,
     io::{Error, ErrorKind},
+    path::Path,
     path::PathBuf,
     str::FromStr,
 };
@@ -76,30 +77,30 @@ pub struct TrackedFile {
 
 impl Records {
     /// initial records.toml
-    pub fn init(lang: &String, tag: &String) -> Result<Records, Error> {
+    pub fn init(lang: &str, tag: &String) -> Result<Records, Error> {
         let root_dir: PathBuf = get_root_dir().unwrap();
         let project_name = root_dir.file_name().unwrap().to_str().unwrap().to_string();
         if let Some(rev) = get_tag_rev(tag) {
-            return Ok(Records {
+            Ok(Records {
                 meta: Meta {
-                    project_name: project_name,
-                    lang: lang.clone(),
+                    project_name,
+                    lang: lang.to_owned(),
                     track_rev: if tag == "HEAD" { rev } else { tag.clone() },
                     datetime: Datetime::from_str(&Local::now().to_rfc3339()).unwrap(),
                 },
                 files: Vec::new(),
-            });
+            })
         } else {
             let err = Error::new(
                 ErrorKind::InvalidInput,
                 format!("{tag} is not a valid revision"),
             );
-            return Err(err);
+            Err(err)
         }
     }
     /// Add file to records
-    pub fn add(&mut self, path: &PathBuf, lock: bool) -> Result<TrackedFile, Error> {
-        let path = unify(&path);
+    pub fn add(&mut self, path: &Path, lock: bool) -> Result<TrackedFile, Error> {
+        let path = unify(path);
         if self.contains(&path) {
             let err = Error::new(ErrorKind::AlreadyExists, "record already exists");
             return Err(err);
@@ -114,12 +115,12 @@ impl Records {
             locked: if lock { Some(true) } else { None },
         };
         self.files.push(file.clone());
-        return Ok(file);
+        Ok(file)
     }
 
     /// Remove file from records
-    pub fn remove(&mut self, path: &PathBuf) -> Result<TrackedFile, Error> {
-        let path = unify(&path);
+    pub fn remove(&mut self, path: &Path) -> Result<TrackedFile, Error> {
+        let path = unify(path);
         let path_rel_to_root = get_path_rel_to_root(&path);
 
         if let Some(pos) = self
@@ -136,11 +137,11 @@ impl Records {
     }
 
     /// Update file in records
-    pub fn update<F>(&mut self, path: &PathBuf, modify_fn: F) -> Result<TrackedFile, Error>
+    pub fn update<F>(&mut self, path: &Path, modify_fn: F) -> Result<TrackedFile, Error>
     where
         F: FnOnce(&mut TrackedFile),
     {
-        let path = unify(&path);
+        let path = unify(path);
         let path_rel_to_root = get_path_rel_to_root(&path);
 
         if let Some(file) = self
@@ -159,7 +160,7 @@ impl Records {
     }
 
     /// Get file in records
-    pub fn get(&mut self, path: &PathBuf) -> Result<TrackedFile, Error> {
+    pub fn get(&mut self, path: &Path) -> Result<TrackedFile, Error> {
         let noop = |_: &mut TrackedFile| ();
         self.update(path, noop)
     }
@@ -172,7 +173,7 @@ impl Records {
 
     /// Show all files in records
     pub fn show_all(&self) {
-        if self.files.len() == 0 {
+        if self.files.is_empty() {
             println!("No files in records.");
             return;
         }
@@ -190,7 +191,7 @@ impl Records {
                 Progress::Review => "R".yellow(),
                 Progress::Done => "D".green(),
             };
-            let synced = if file.synced == true {
+            let synced = if file.synced {
                 "S".bright_blue()
             } else {
                 "-".truecolor(128, 128, 128)
@@ -261,7 +262,7 @@ impl Records {
         for file in files {
             println!(
                 "{}\t{}",
-                if locked == true {
+                if locked {
                     "Locked".bright_green()
                 } else {
                     "Unlocked".green()
@@ -272,15 +273,15 @@ impl Records {
     }
 
     /// Mark file status in records
-    pub fn mark_progress(&mut self, prog: Progress, path: &PathBuf) -> Result<TrackedFile, Error> {
+    pub fn mark_progress(&mut self, prog: Progress, path: &Path) -> Result<TrackedFile, Error> {
         let mark_prog = |file: &mut TrackedFile| file.progress = prog;
-        return self.update(path, mark_prog);
+        self.update(path, mark_prog)
     }
 
     /// Sync file revision in records
-    pub fn set_synced(&mut self, path: &PathBuf) -> Result<TrackedFile, Error> {
+    pub fn set_synced(&mut self, path: &Path) -> Result<TrackedFile, Error> {
         let sync = |file: &mut TrackedFile| {
-            file.track_rev = get_file_rev(&path);
+            file.track_rev = get_file_rev(path);
             file.synced = true;
         };
         self.update(path, sync)
@@ -289,17 +290,13 @@ impl Records {
     /// Update sync status for all files
     pub fn update_sync(&mut self) {
         for file in self.files.iter_mut() {
-            if file.track_rev == get_file_rev(&file.path) {
-                file.synced = true;
-            } else {
-                file.synced = false;
-            }
+            file.synced = file.track_rev == get_file_rev(&file.path);
         }
         self.save().unwrap();
     }
 
     /// Lock file in records
-    pub fn set_lock(&mut self, locked: bool, path: &PathBuf) -> Result<TrackedFile, Error> {
+    pub fn set_lock(&mut self, locked: bool, path: &Path) -> Result<TrackedFile, Error> {
         let lock = |file: &mut TrackedFile| {
             if locked {
                 file.locked = Some(true);
@@ -307,12 +304,12 @@ impl Records {
                 file.locked = None;
             }
         };
-        return self.update(path, lock);
+        self.update(path, lock)
     }
 
     /// Check if records contains the file
-    pub fn contains(&self, path: &PathBuf) -> bool {
-        let path = unify(&path);
+    pub fn contains(&self, path: &Path) -> bool {
+        let path = unify(path);
         let path_rel_to_root = get_path_rel_to_root(&path);
         self.files.iter().any(|file| file.path == path_rel_to_root)
     }

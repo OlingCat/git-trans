@@ -43,14 +43,12 @@ pub fn main() -> Result<(), Error> {
         Init { lang, tag } => {
             let content = toml::to_string(&Records::init(lang, tag).unwrap()).unwrap();
             create_file_with_dirs(records_toml)
-                .and_then(|mut file| {
+                .map(|mut file| {
                     info!("File .trans/records.toml created.");
                     file.write_all(content.as_bytes());
-                    Ok(())
                 })
-                .or_else(|err| {
+                .inspect_err(|err| {
                     error!("File .trans/records.toml created failed.");
-                    Err(err)
                 })
         }
 

@@ -8,7 +8,7 @@ use log::debug;
 use crate::git::get_root_dir;
 
 /// # File handling functions
-
+///
 /// Create a file with all the necessary directories
 pub fn create_file_with_dirs<P: AsRef<Path>>(path: P) -> Result<File> {
     if let Some(parent) = path.as_ref().parent() {
@@ -17,7 +17,7 @@ pub fn create_file_with_dirs<P: AsRef<Path>>(path: P) -> Result<File> {
     if path.as_ref().exists() {
         return Err(Error::new(ErrorKind::AlreadyExists, "file already exists"));
     }
-    OpenOptions::new().write(true).create(true).open(path)
+    OpenOptions::new().write(true).truncate(true).open(path)
 }
 
 /// Copy a file to a new location with all the necessary directories
@@ -96,15 +96,15 @@ fn copy_dir_recursive(src: &Path, dest_root: &Path, base: &Path) -> Result<u64> 
 }
 
 /// # Path handling functions
-
+///
 /// Get the .trans directory
 pub fn get_trans_dir() -> PathBuf {
-    return get_root_dir().unwrap().join(".trans");
+    get_root_dir().unwrap().join(".trans")
 }
 
 /// Get the records.toml file path
 pub fn get_records_toml() -> PathBuf {
-    return get_trans_dir().join("records.toml");
+    get_trans_dir().join("records.toml")
 }
 
 /// Convert an absolute path to a relative path
@@ -118,16 +118,16 @@ pub fn absolute_to_relative<P: AsRef<Path>, Q: AsRef<Path>>(
 }
 
 /// Convert a path to a unix style path
-pub fn unify(path: &PathBuf) -> PathBuf {
+pub fn unify(path: &Path) -> PathBuf {
     PathBuf::from(path.to_str().unwrap().replace("\\", "/"))
 }
 
 /// Get the relative path of a file to the root directory
-pub fn get_path_rel_to_root(path: &PathBuf) -> PathBuf {
+pub fn get_path_rel_to_root(path: &Path) -> PathBuf {
     let root_dir: PathBuf = get_root_dir().unwrap();
-    let path = unify(&path);
-    return unify(
+    let path = unify(path);
+    unify(
         &absolute_to_relative::<PathBuf, PathBuf>(root_dir, fs::canonicalize(&path).unwrap())
             .unwrap(),
-    );
+    )
 }
