@@ -38,7 +38,7 @@ pub enum Commands {
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
-    /// List files in .trans
+    /// List files status in .trans
     Ls {
         /// Path to list files in
         #[arg(default_value = "./")]
@@ -62,7 +62,6 @@ pub enum Commands {
         #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
-
     /// Sync file with latest revision
     #[command(arg_required_else_help = true)]
     Sync {

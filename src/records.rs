@@ -98,6 +98,7 @@ impl Records {
             Err(err)
         }
     }
+
     /// Add file to records
     pub fn add(&mut self, path: &Path, lock: bool) -> Result<TrackedFile, Error> {
         let path = unify(path);
