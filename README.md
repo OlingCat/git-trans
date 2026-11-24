@@ -8,7 +8,7 @@ A translation toolbox for projects using git.
 2. 然后执行 `git trans add <file>...` 可以添加需要翻译的文件，它会将文件复制到 `.trans` 文件夹下，同时在 `records.toml` 文件中跟踪该文件对应的 git revision。
 3. `git trans show` 可以查看当前项目中记录的对应状态的文件。
 4. `git trans rm <file>...` 可以删除不需要翻译的文件。
-5. `git trans todo`  会显示所有正在翻译（trans），正在校对（review），和未同步（unsynced）的文件。
+5. `git trans todo`  会显示所有正在翻译（trans），正在校对（review），和已过期（outdated）的文件。
 6. 在翻译完成后，可以执行 `git trans mark review <file>...` 来标记文件为待校对，
 校对完成后可以执行 `git trans mark done <file>...` 标记文件为已完成。
 7. 当主 repo 更新后，需要执行 `git trans update` 来更新所有文件跟踪的 git revision。
@@ -75,7 +75,7 @@ git log -- .trans/
 - [x] add <file>
 - [x] rm <file>
 - [ ] ls  列出当前文件夹下所有记录的文件，-r 递归
-- [x] todo 显示所有 trans，review 和 unsynced 的文件，-a 显示所有文件状态
+- [x] todo 显示所有 trans，review 和 outdated 的文件，-a 显示所有文件状态
 - [x] log  显示 .trans 文件夹下所有文件的修改历史
 - [ ] info <file>
 - [x] diff <file>
@@ -89,7 +89,7 @@ git log -- .trans/
   + [x] review
   + [x] done
   + [x] synced
-  + [x] unsynced
+  + [x] outdated
   + [x] locked
   + [x] unlocked
 - [x] mark

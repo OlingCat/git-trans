@@ -1,14 +1,20 @@
 [package]
 name = "git-trans"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-homepage = "https://github.com/OlingCat/git-trans"
 repository = "https://github.com/OlingCat/git-trans"
 description = "A translation toolbox for projects using git"
 readme = "README.md"
 license = "MIT"
 keywords = ["git", "translate"]
 categories = ["command-line-utilities", "internationalization", "localization"]
+
+[package.metadata.scripts]
+run = "cargo run"
+check = "cargo check"
+build = "cargo build"
+release = "cargo build --release"
+init = "cargo run -- init"
 
 [dependencies]
 anyhow = "1.0.97"
@@ -22,9 +28,5 @@ thiserror = "2.0.12"
 toml = "0.8.19"
 wild = { version = "2.2.1", features = ["glob-quoted-on-windows"] }
 
-[package.metadata.scripts]
-run = "cargo run"
-check = "cargo check"
-build = "cargo build"
-release = "cargo build --release"
-init = "cargo run -- init"
+[lints.rust]
+unused_crate_dependencies = "allow"

@@ -142,7 +142,7 @@ pub fn main() -> Result<(), Error> {
                         ShowStatus::Review => records.show_progress(Progress::Review),
                         ShowStatus::Done => records.show_progress(Progress::Done),
                         ShowStatus::Synced => records.show_synced(true),
-                        ShowStatus::Unsynced => records.show_synced(false),
+                        ShowStatus::Outdated => records.show_synced(false),
                         ShowStatus::Locked => records.show_locked(true),
                         ShowStatus::Unlocked => records.show_locked(false),
                     }

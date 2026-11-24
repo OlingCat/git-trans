@@ -228,7 +228,7 @@ impl Records {
         if files.clone().count() == 0 {
             println!(
                 "\nNo files are {}.",
-                if synced { "Synced" } else { "Unsynced" }
+                if synced { "Synced" } else { "Outdated" }
             );
             return;
         }
@@ -238,7 +238,7 @@ impl Records {
                 if file.synced {
                     "Synced".bright_blue()
                 } else {
-                    "Unsynced".blue()
+                    "Outdated".blue()
                 },
                 file.path.display()
             );

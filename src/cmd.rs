@@ -50,7 +50,7 @@ pub enum Commands {
         #[arg(short, long, exclusive = true)]
         all: bool,
     },
-    /// Show trans, review, and unsynced files
+    /// Show trans, review, and outdated files
     Todo,
     /// Diff file changes
     #[command(arg_required_else_help = true)]
@@ -115,8 +115,8 @@ pub enum ShowStatus {
     Done,
     /// Show synced files
     Synced,
-    /// Show unsynced files
-    Unsynced,
+    /// Show outdated files
+    Outdated,
     /// Show locked files
     Locked,
     /// Show unlocked files
