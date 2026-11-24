@@ -164,8 +164,13 @@ pub fn main() -> Result<(), Error> {
                 }
                 Sync { path_args: path } => {
                     let path = &path[0].to_path_buf();
-                    records.set_synced(path);
-                    Ok(())
+                    match records.set_synced(path) {
+                        Ok(_) => Ok(()),
+                        Err(err) => {
+                            eprintln!("Error: {err}");
+                            Err(err)
+                        }
+                    }
                 }
                 Update => {
                     records.update_sync();

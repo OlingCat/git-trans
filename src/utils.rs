@@ -1,6 +1,6 @@
 use core::convert::AsRef;
 use std::fs::{self, File, OpenOptions};
-use std::io::{Error, ErrorKind, Read, Result, Write};
+use std::io::{Error, ErrorKind, Result, Write};
 use std::path::{Path, PathBuf, StripPrefixError};
 
 use log::debug;

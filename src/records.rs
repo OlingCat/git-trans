@@ -103,8 +103,8 @@ impl Records {
     pub fn add(&mut self, path: &Path, lock: bool) -> Result<TrackedFile, Error> {
         let path = unify(path);
         if self.contains(&path) {
-            let err = Error::new(ErrorKind::AlreadyExists, "record already exists");
-            return Err(err);
+            let record_exsist = Error::new(ErrorKind::AlreadyExists, "record already exists");
+            return Err(record_exsist);
         }
 
         let path_rel_to_root = get_path_rel_to_root(&path);
@@ -281,6 +281,15 @@ impl Records {
 
     /// Sync file revision in records
     pub fn set_synced(&mut self, path: &Path) -> Result<TrackedFile, Error> {
+        if let (Ok(current_dir), Some(root_dir)) = (std::env::current_dir(), get_root_dir())
+            && current_dir != root_dir
+        {
+            let not_in_root_repo = Error::new(
+                ErrorKind::InvalidInput,
+                "Please run `git trans sync` on repo's root directory!",
+            );
+            return Err(not_in_root_repo);
+        };
         let sync = |file: &mut TrackedFile| {
             file.track_rev = get_file_rev(path);
             file.synced = true;

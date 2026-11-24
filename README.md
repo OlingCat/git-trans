@@ -23,7 +23,7 @@ A translation toolbox for projects using git.
 2. 执行 `git trans cover` 覆盖所有翻译的文件到 repo 根目录下，然后 `make` 编译生成。
 3. 执行 `git trans reset` 重置所有文件到初始状态。
 4. 执行 `git add` 添加新翻译的文件并提交。注意保持 `.trans` 文件夹以外的内容为未修改状态。
-5. 当主 repo 更新后，需要执行 `git trans update` 来更新所有文件跟踪的 git revision。
+5. 当主 repo 更新后，需要执行 `git trans update` 来更新所有文件的同步状态。
 6. 如果不想更新某个文件的 git revision，可以执行 `git trans lock <file>...` 来锁定该文件，
 执行 `git trans unlock <file>...` 可以解锁该文件。
 
@@ -80,6 +80,7 @@ git log -- .trans/
 - [ ] info <file>
 - [x] diff <file>
 - [x] gendiff <file>
+  - [ ] gendiff --all
 - [x] sync <file>  同步文件到最新版本
 - [x] cover
 - [x] reset
