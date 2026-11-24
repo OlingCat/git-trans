@@ -1,6 +1,6 @@
 use core::convert::AsRef;
 use std::fs::{self, File, OpenOptions};
-use std::io::{Error, ErrorKind, Result, Write};
+use std::io::{Error, ErrorKind, Read, Result, Write};
 use std::path::{Path, PathBuf, StripPrefixError};
 
 use log::debug;
@@ -10,14 +10,14 @@ use crate::git::get_root_dir;
 /// # File handling functions
 ///
 /// Create a file with all the necessary directories
-pub fn create_file_with_dirs<P: AsRef<Path>>(path: P) -> Result<File> {
+pub fn create_file_with_dirs<P: AsRef<Path> + std::fmt::Debug>(path: P) -> Result<File> {
     if let Some(parent) = path.as_ref().parent() {
         fs::create_dir_all(parent)?;
     }
     if path.as_ref().exists() {
         return Err(Error::new(ErrorKind::AlreadyExists, "file already exists"));
     }
-    OpenOptions::new().write(true).truncate(true).open(path)
+    OpenOptions::new().write(true).create_new(true).open(path)
 }
 
 /// Copy a file to a new location with all the necessary directories
@@ -36,7 +36,7 @@ pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q, overwrite: bool
 pub fn copy_file_to_trans<P: AsRef<Path>>(from: P) -> Result<u64> {
     let path_rel_to_root = get_path_rel_to_root(&PathBuf::from(from.as_ref()));
     let to = get_trans_dir().join(path_rel_to_root);
-    println!("from: {:?}, to: {:?}", from.as_ref(), to);
+    debug!("from: {:?}, to: {:?}", from.as_ref(), to);
     copy_file(from, to, false)
 }
 
@@ -47,7 +47,7 @@ pub fn write_diff_file_to_trans<P: AsRef<Path>>(to: P, content: &str) -> Result<
     if let Some(fname) = to.file_name().and_then(|s| s.to_str()) {
         to.set_file_name(format!("{}.diff", fname));
     }
-    let mut file = create_file_with_dirs(to)?;
+    let mut file = create_file_with_dirs(&to)?;
     file.write_all(content.as_bytes())?;
     Ok(())
 }
