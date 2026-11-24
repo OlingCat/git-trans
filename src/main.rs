@@ -101,16 +101,29 @@ pub fn main() -> Result<(), Error> {
                 }
                 Diff {
                     path_args: path,
-                    gendiff,
+                    genfile,
+                    genall,
                 } => {
-                    let path = &path[0].to_path_buf();
-                    let old_rev = records.get(path).unwrap().track_rev;
-                    let new_rev = get_file_rev(path);
-                    let diff_file = get_diff(path, &old_rev, &new_rev);
-                    if *gendiff {
-                        write_diff_file_to_trans(path, &diff_file)?;
+                    if *genall {
+                        let list = records.get_outdated_list();
+                        for outdated in list {
+                            let path = outdated.clone();
+                            let content = records.diff(&path);
+                            write_diff_file_to_trans(&path, &content)?;
+                        }
                     } else {
-                        println!("{}", diff_file);
+                        let path = path.first().ok_or_else(|| {
+                            Error::new(
+                                ErrorKind::InvalidInput,
+                                "A file path is required unless --genall is used",
+                            )
+                        })?;
+                        let content = records.diff(path);
+                        if *genfile {
+                            write_diff_file_to_trans(path, &content)?;
+                        } else {
+                            println!("{}", content);
+                        }
                     }
                     Ok(())
                 }

@@ -8,8 +8,7 @@ use std::{
     fmt::Display,
     fs,
     io::{Error, ErrorKind},
-    path::Path,
-    path::PathBuf,
+    path::{Path, PathBuf},
     str::FromStr,
 };
 use toml::value::Datetime;
@@ -161,9 +160,15 @@ impl Records {
     }
 
     /// Get file in records
-    pub fn get(&mut self, path: &Path) -> Result<TrackedFile, Error> {
-        let noop = |_: &mut TrackedFile| ();
-        self.update(path, noop)
+    pub fn get(&self, path: &Path) -> Result<TrackedFile, Error> {
+        let path = unify(path);
+        let path_rel_to_root = get_path_rel_to_root(&path);
+
+        self.files
+            .iter()
+            .find(|file| file.path == path_rel_to_root)
+            .cloned()
+            .ok_or_else(|| Error::new(ErrorKind::NotFound, "record not found"))
     }
 
     /// Save records to records.toml
@@ -245,6 +250,21 @@ impl Records {
         }
     }
 
+    pub fn get_outdated_list(&self) -> Vec<PathBuf> {
+        let outdated: Vec<_> = self.files.iter().filter(|file| !file.synced).collect();
+        if outdated.is_empty() {
+            println!("\nNo files are Outdated.");
+            return Vec::new();
+        }
+        outdated.into_iter().map(|file| file.path.clone()).collect()
+    }
+
+    pub fn diff(&self, path: &Path) -> String {
+        let old_rev = self.get(path).unwrap().track_rev.clone();
+        let new_rev = get_file_rev(path);
+        get_diff(path, &old_rev, &new_rev)
+    }
+
     pub fn show_locked(&self, locked: bool) {
         let files = self.files.iter().filter(|file| {
             if locked {
@@ -293,6 +313,8 @@ impl Records {
         let sync = |file: &mut TrackedFile| {
             file.track_rev = get_file_rev(path);
             file.synced = true;
+            let filename = file.path.clone();
+            let _ = remove_diff_file(filename);
         };
         self.update(path, sync)
     }

@@ -40,7 +40,7 @@ pub fn copy_file_to_trans<P: AsRef<Path>>(from: P) -> Result<u64> {
     copy_file(from, to, false)
 }
 
-/// Write content to a file
+/// Write diff content to a file
 pub fn write_diff_file_to_trans<P: AsRef<Path>>(to: P, content: &str) -> Result<()> {
     let path_rel_to_root = get_path_rel_to_root(&PathBuf::from(to.as_ref()));
     let mut to = get_trans_dir().join(path_rel_to_root);
@@ -49,6 +49,19 @@ pub fn write_diff_file_to_trans<P: AsRef<Path>>(to: P, content: &str) -> Result<
     }
     let mut file = create_file_with_dirs(&to)?;
     file.write_all(content.as_bytes())?;
+    Ok(())
+}
+
+/// Remove diff file
+pub fn remove_diff_file<P: AsRef<Path>>(filename: P) -> Result<()> {
+    let path_rel_to_root = get_path_rel_to_root(&PathBuf::from(filename.as_ref()));
+    let mut diff_file = get_trans_dir().join(path_rel_to_root);
+    if let Some(fname) = diff_file.file_name().and_then(|s| s.to_str()) {
+        diff_file.set_file_name(format!("{}.diff", fname));
+        if diff_file.exists() {
+            fs::remove_file(diff_file)?;
+        }
+    }
     Ok(())
 }
 

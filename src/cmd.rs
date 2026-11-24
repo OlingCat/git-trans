@@ -57,9 +57,11 @@ pub enum Commands {
     Diff {
         /// Generate diff files
         #[arg(short, long)]
-        gendiff: bool,
+        genfile: bool,
+        /// Generate diff files
+        #[arg(short = 'a', long)]
+        genall: bool,
         /// File to diff with latest revision
-        #[arg(required = true)]
         path_args: Vec<PathBuf>,
     },
     /// Sync file with latest revision

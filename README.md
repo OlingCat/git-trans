@@ -80,22 +80,22 @@ git log -- .trans/
 - [ ] info <file>
 - [x] diff <file>
 - [x] gendiff <file>
-  - [ ] gendiff --all
+  - [x] gendiff --all
 - [x] sync <file>  同步文件到最新版本
 - [x] cover
 - [x] reset
 - [x] show
-  + [x] all
-  + [x] todo
-  + [x] review
-  + [x] done
-  + [x] synced
-  + [x] outdated
-  + [x] locked
-  + [x] unlocked
+  - [x] all
+  - [x] todo
+  - [x] review
+  - [x] done
+  - [x] synced
+  - [x] outdated
+  - [x] locked
+  - [x] unlocked
 - [x] mark
-  + [x] trans
-  + [x] review
-  + [x] done
+  - [x] trans
+  - [x] review
+  - [x] done
 - [x] lock
 - [x] unlock
